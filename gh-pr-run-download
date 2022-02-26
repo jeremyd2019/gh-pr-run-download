@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+repoarg=""
+partialarg=""
+declare -a args
+for arg; do
+	if [[ -n "${partialarg}" ]]; then
+		repoarg="${partialarg} ${arg}"
+		partialarg=""
+		continue
+	fi
+	case "${arg}" in
+		-R)
+			partialarg="${arg}"
+			;;
+		*)
+			args+=("${arg}")
+			;;
+	esac
+done
+
+pr="${args[-1]}"
+unset args[-1]
+
+gh run download ${repoarg} "${args[@]}" $(gh run ${repoarg} list --json databaseId,headSha -q "map(select(.headSha==\"$(gh pr view ${repoarg} --json commits -q '.commits[-1].oid' "${pr}")\"))[0].databaseId")
