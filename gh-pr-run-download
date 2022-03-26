@@ -3,21 +3,8 @@
 set -e
 set -o pipefail
 
-repoarg=""
-partialarg=""
-declare -a args
-for arg; do
-	if [[ -n "${partialarg}" ]]; then
-		repoarg="${partialarg} ${arg}"
-		partialarg=""
-		continue
-	fi
-	case "${arg}" in
-		-R|--repo)
-			partialarg="${arg}"
-			;;
-		-h|--help)
-			cat <<'END'
+usage() {
+	cat <<'END'
 Download artifacts from the GitHub Actions workflow run associated with a
 pull request.
 
@@ -25,14 +12,36 @@ USAGE
   gh pr-run-download [flags] <number> | <url> | <branch>
 
 END
-			gh run download --help | sed -ne '/FLAGS/,/^$/p'
-			exit 0
+	gh run download --help | sed -ne '/FLAGS$/,/^$/p'
+	exit 0
+}
+
+argvar=""
+repoarg=""
+declare -a args
+for arg; do
+	if [[ -n "${argvar}" ]]; then
+		declare "${argvar}=${!argvar} ${arg}"
+		argvar=""
+		continue
+	fi
+	case "${arg}" in
+		-R|--repo)
+			repoarg="${arg}"
+			argvar="repoarg"
+			;;
+		-h|--help)
+			usage
 			;;
 		*)
 			args+=("${arg}")
 			;;
 	esac
 done
+
+if [ ${#args} -eq 0 ]; then
+	usage
+fi
 
 pr="${args[-1]}"
 unset args[-1]
