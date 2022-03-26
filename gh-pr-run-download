@@ -13,8 +13,20 @@ for arg; do
 		continue
 	fi
 	case "${arg}" in
-		-R)
+		-R|--repo)
 			partialarg="${arg}"
+			;;
+		-h|--help)
+			cat <<'END'
+Download artifacts from the GitHub Actions workflow run associated with a
+pull request.
+
+USAGE
+  gh pr-run-download [flags] <number> | <url> | <branch>
+
+END
+			gh run download --help | sed -ne '/FLAGS/,/^$/p'
+			exit 0
 			;;
 		*)
 			args+=("${arg}")
