@@ -25,4 +25,6 @@ done
 pr="${args[-1]}"
 unset args[-1]
 
-gh run download ${repoarg} "${args[@]}" $(gh run ${repoarg} list --json databaseId,headSha -q "map(select(.headSha==\"$(gh pr view ${repoarg} --json commits -q '.commits[-1].oid' "${pr}")\"))[0].databaseId")
+declare -a pr_info
+readarray -t pr_info < <(gh pr view ${repoarg} --json commits,headRefName -q '.commits[-1].oid,.headRefName' "${pr}")
+gh run download ${repoarg} "${args[@]}" $(gh run ${repoarg} list -b "${pr_info[1]}" --json databaseId,headSha -q "map(select(.headSha==\"${pr_info[0]}\"))[0].databaseId")
